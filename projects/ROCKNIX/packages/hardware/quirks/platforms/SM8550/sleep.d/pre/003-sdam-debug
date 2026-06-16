@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: GPL-2.0
 # Copyright (C) 2026 ROCKNIX (https://github.com/ROCKNIX)
 
-# Mark SDAM byte 0 = 0x01 (entered suspend, kernel PM path not yet started).
-# If byte 0 is 0x01 on next boot, the failure was inside the kernel PM path.
-# If byte 0 is 0xFF, suspend/resume completed fully before the failure.
+# Mark SDAM byte 0x50 = 0x01 (entered suspend, kernel PM path not yet started).
+# If byte 0x50 is 0x01 on next boot, the failure was inside the kernel PM path.
+# If byte 0x50 is 0xFF, suspend/resume completed fully before the failure.
+# Offset 0x50 is within the 0x50-0x7f window confirmed free for scratch use on
+# spmi_sdam0 (offset 0 is out of bounds for this device and always fails).
 printf '\x01' | dd of=/sys/bus/nvmem/devices/spmi_sdam0/nvmem \
-    bs=1 count=1 seek=0 conv=notrunc 2>/dev/null || true
+    bs=1 count=1 seek=80 conv=notrunc 2>/dev/kmsg || echo "003-sdam-debug: SDAM write failed" >/dev/kmsg
